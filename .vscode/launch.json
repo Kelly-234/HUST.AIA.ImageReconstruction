@@ -24,6 +24,19 @@
             ],
             "console": "integratedTerminal",
             "justMyCode": true
+        },
+        {
+            "name": "UNet",
+            "type": "python",
+            "request": "launch",
+            "program": "main.py",
+            "args": [
+                "--model=UNet",
+                "--log-interval=2",
+                "--batch-size=128"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
         }
     ]
 }
