@@ -159,6 +159,6 @@ class SegNet(BaseModel):
         x = F.relu(self.BNDe12(self.ConvDe12(x)))
         x = self.ConvDe11(x)
 
-        x = F.softmax(x, dim=1)
+        x = F.sigmoid(x)
 
         return x.reshape(x.shape[0], -1)
