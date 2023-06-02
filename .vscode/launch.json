@@ -13,10 +13,10 @@
             "justMyCode": true
         },
         {
-            "name": "SegNet",
+            "name": "SegNet train",
             "type": "python",
             "request": "launch",
-            "program": "main.py",
+            "program": "train.py",
             "args": [
                 "--model=SegNet",
                 "--log-interval=2",
@@ -26,14 +26,26 @@
             "justMyCode": true
         },
         {
-            "name": "UNet",
+            "name": "UNet train",
             "type": "python",
             "request": "launch",
-            "program": "main.py",
+            "program": "train.py",
             "args": [
                 "--model=UNet",
                 "--log-interval=2",
                 "--batch-size=128"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "UNet test",
+            "type": "python",
+            "request": "launch",
+            "program": "test.py",
+            "args": [
+                "--model=UNet",
+                "--checkpoint=data\\UNet\\default\\epoch_15.pth"
             ],
             "console": "integratedTerminal",
             "justMyCode": true

@@ -12,30 +12,32 @@ import torch.utils.data
 import torch
 import numpy as np
 import argparse
+import os
 import sys
 sys.path.append('.')
-
+from test import test
 
 # --- parsing and configuration --- #
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="HUST.AIA.ImageReconstruction")
-    parser.add_argument('--batch-size', type=int, default=128,
-                        help='batch size for training (default: 128)')
+        description="HUST.AIA.ImageReconstruction training")
+    parser.add_argument('--batch-size', type=int, default=64,
+                        help='batch size for training (default: 64)')
     parser.add_argument('--epochs', type=int, default=20,
                         help='number of args.epochs to train (default: 20)')
-    parser.add_argument('--log-interval', type=int, default=100,
-                        help='interval between logs about training status (default: 100)')
+    parser.add_argument('--log-interval', type=int, default=1,
+                        help='interval between logs about training status (default: 1)')
     parser.add_argument('--learning-rate', type=int, default=1e-3,
                         help='learning rate for Adam optimizer (default: 1e-3)')
     parser.add_argument('--model', type=str, default='UNet')
+    parser.add_argument('--exp-name', type=str, default='default')
+    parser.add_argument('--resume-from', type=str, default=None)
 
     args = parser.parse_args()
     return args
 
-# --- train and test --- #
-
+# --- train --- #
 
 def train(args, model, optimizer, train_loader, epoch, device):
     model.train()
@@ -56,45 +58,16 @@ def train(args, model, optimizer, train_loader, epoch, device):
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                 100.*batch_idx / len(train_loader),
                 cur_loss/len(data)))
-
+    
     print('====> Epoch: {} Average loss: {:.4f}'.format(
         epoch, train_loss / len(train_loader.dataset)
     ))
-
-
-def test(args, model, metrics, test_loader, epoch, device):
-    model.eval()
-    test_loss = 0
-    metrics_dict = {}
-    for metric in metrics:
-        metrics_dict[str(metric)] = []
-
-    with torch.no_grad():
-        for batch_idx, (data, label) in enumerate(test_loader):
-            data = data.to(device)
-            recon_data = model(data)
-            cur_loss = model.get_loss(recon_data, data).item()
-            test_loss += cur_loss
-            if batch_idx == 0:
-                # saves 8 samples of the first batch as an image file to compare input images and reconstructed images
-                num_samples = min(args.batch_size, 8)
-                comparison = torch.cat(
-                    [data[:num_samples], recon_data['img'].view(args.batch_size, 1, 28, 28)[:num_samples]]).cpu()
-                model.save_img(
-                    comparison, 'reconstruction', epoch, num_samples)
-
-            for metric in metrics:
-                metrics_dict[str(metric)].append(
-                    metric(recon_data['img'], data))
-
-    test_loss /= len(test_loader.dataset)
-    print('====> Test loss: {:.4f}'.format(test_loss))
-
-    for k, v in metrics_dict.items():
-        print('====> Test {}: {:.4f}'.format(k, np.mean(v)))
+    if epoch % 5 == 0:
+        save_path = os.path.join("data",str(model),args.exp_name)
+        os.makedirs(save_path,exist_ok=True)
+        torch.save(model.state_dict(),os.path.join(save_path,"epoch_{}.pth".format(epoch)))
 
 # --- main function --- #
-
 
 def main():
     args = parse_args()
@@ -115,7 +88,9 @@ def main():
         train_data, batch_size=args.batch_size, shuffle=True, **kwargs)
     test_loader = torch.utils.data.DataLoader(
         test_data, batch_size=args.batch_size, shuffle=True, **kwargs)
-
+    
+    if args.resume_from is not None:
+        model.load_state_dict(torch.load(args.resume_from))
     for epoch in range(1, args.epochs + 1):
         train(args, model, optimizer, train_loader, epoch, device)
         test(args, model, metrics, test_loader, epoch, device)
