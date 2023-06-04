@@ -28,7 +28,7 @@ def parse_args():
                         help='number of args.epochs to train (default: 20)')
     parser.add_argument('--log-interval', type=int, default=1,
                         help='interval between logs about training status (default: 1)')
-    parser.add_argument('--learning-rate', type=int, default=1e-3,
+    parser.add_argument('--learning-rate', type=float, default=1e-3,
                         help='learning rate for Adam optimizer (default: 1e-3)')
     parser.add_argument('--model', type=str, default='UNet')
     parser.add_argument('--exp-name', type=str, default='default')
@@ -71,7 +71,7 @@ def train(args, model, optimizer, train_loader, epoch, device):
 
 def main():
     args = parse_args()
-    metrics = [MAE()]
+    metrics = [MAE(), PSNR(), RMSE(), SSIM()]
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     kwargs = {'num_workers': 1, 'pin_memory': True} if device == 'cuda' else {}

@@ -67,7 +67,7 @@ def test(args, model, metrics, test_loader, epoch=20, device="cpu"):
 
 def main():
     args = parse_args()
-    metrics = [MAE()]
+    metrics = [MAE(), PSNR(), RMSE(), SSIM()]
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     kwargs = {'num_workers': 1, 'pin_memory': True} if device == 'cuda' else {}
