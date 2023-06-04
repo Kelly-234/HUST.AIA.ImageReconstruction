@@ -13,6 +13,19 @@
             "justMyCode": true
         },
         {
+            "name": "HourGlass train",
+            "type": "python",
+            "request": "launch",
+            "program": "train.py",
+            "args": [
+                "--model=HourGlass",
+                "--log-interval=2",
+                "--batch-size=128"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "SegNet train",
             "type": "python",
             "request": "launch",
