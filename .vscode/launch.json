@@ -39,6 +39,19 @@
             "justMyCode": true
         },
         {
+            "name": "FPN train",
+            "type": "python",
+            "request": "launch",
+            "program": "train.py",
+            "args": [
+                "--model=FPN",
+                "--log-interval=2",
+                "--batch-size=16"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "UNet test",
             "type": "python",
             "request": "launch",
