@@ -149,3 +149,5 @@ class FPN(BaseModel):
         
         return torch.sigmoid(result.reshape(result.shape[0], -1))
     
+    def __str__(self):
+        return "FPN"
