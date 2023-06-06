@@ -32,7 +32,8 @@ def parse_args():
 
 # --- test --- #
 
-def test(args, model, metrics, test_loader, epoch=20, device="cpu"):
+
+def test(args, model, metrics, test_loader, epoch=5, device="cpu"):
     model.eval()
     test_loss = 0
     metrics_dict = {}
@@ -56,7 +57,7 @@ def test(args, model, metrics, test_loader, epoch=20, device="cpu"):
             for metric in metrics:
                 metrics_dict[str(metric)].append(
                     metric(recon_data, data))
-        
+
     test_loss /= len(test_loader.dataset)
     print('====> Test loss: {:.4f}'.format(test_loss))
 
@@ -64,6 +65,7 @@ def test(args, model, metrics, test_loader, epoch=20, device="cpu"):
         print('====> Test {}: {:.4f}'.format(k, np.mean(v)))
 
 # --- main function --- #
+
 
 def main():
     args = parse_args()
@@ -79,9 +81,10 @@ def main():
 
     test_loader = torch.utils.data.DataLoader(
         test_data, batch_size=args.batch_size, shuffle=True, **kwargs)
-    
+
     model.load_state_dict(torch.load(args.checkpoint))
-    test(args, model, metrics, test_loader, int(args.checkpoint.split('_')[-1][:-4]))
+    test(args, model, metrics, test_loader, int(
+        args.checkpoint.split('_')[-1][:-4]))
 
 
 if __name__ == '__main__':

@@ -1,3 +1,4 @@
+from test import test
 from metrics.ssim import SSIM
 from metrics.rmse import RMSE
 from metrics.psnr import PSNR
@@ -15,17 +16,17 @@ import argparse
 import os
 import sys
 sys.path.append('.')
-from test import test
 
 # --- parsing and configuration --- #
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
         description="HUST.AIA.ImageReconstruction training")
     parser.add_argument('--batch-size', type=int, default=64,
                         help='batch size for training (default: 64)')
-    parser.add_argument('--epochs', type=int, default=20,
-                        help='number of args.epochs to train (default: 20)')
+    parser.add_argument('--epochs', type=int, default=5,
+                        help='number of args.epochs to train (default: 5)')
     parser.add_argument('--log-interval', type=int, default=1,
                         help='interval between logs about training status (default: 1)')
     parser.add_argument('--learning-rate', type=float, default=1e-3,
@@ -38,6 +39,7 @@ def parse_args():
     return args
 
 # --- train --- #
+
 
 def train(args, model, optimizer, train_loader, epoch, device):
     model.train()
@@ -58,16 +60,18 @@ def train(args, model, optimizer, train_loader, epoch, device):
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                 100.*batch_idx / len(train_loader),
                 cur_loss/len(data)))
-    
+
     print('====> Epoch: {} Average loss: {:.4f}'.format(
         epoch, train_loss / len(train_loader.dataset)
     ))
-    if epoch % 5 == 0:
-        save_path = os.path.join("data",str(model),args.exp_name)
-        os.makedirs(save_path,exist_ok=True)
-        torch.save(model.state_dict(),os.path.join(save_path,"epoch_{}.pth".format(epoch)))
+    if epoch % 1 == 0:
+        save_path = os.path.join("data", str(model), args.exp_name)
+        os.makedirs(save_path, exist_ok=True)
+        torch.save(model.state_dict(), os.path.join(
+            save_path, "epoch_{}.pth".format(epoch)))
 
 # --- main function --- #
+
 
 def main():
     args = parse_args()
@@ -88,7 +92,7 @@ def main():
         train_data, batch_size=args.batch_size, shuffle=True, **kwargs)
     test_loader = torch.utils.data.DataLoader(
         test_data, batch_size=args.batch_size, shuffle=True, **kwargs)
-    
+
     if args.resume_from is not None:
         model.load_state_dict(torch.load(args.resume_from))
     for epoch in range(1, args.epochs + 1):

@@ -75,6 +75,18 @@
             ],
             "console": "integratedTerminal",
             "justMyCode": true
+        },
+        {
+            "name": "SegNet test",
+            "type": "python",
+            "request": "launch",
+            "program": "test.py",
+            "args": [
+                "--model=SegNet",
+                "--checkpoint=data\\SegNet\\default\\epoch_20.pth"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
         }
     ]
 }
