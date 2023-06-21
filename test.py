@@ -1,3 +1,4 @@
+from pipeline import GetCopy, GetEdge, GetBlur
 from metrics.ssim import SSIM
 from metrics.rmse import RMSE
 from metrics.psnr import PSNR
@@ -7,12 +8,10 @@ from models.hourglass import HourGlass
 from models.segnet import SegNet
 from models.unet import UNet
 from torchvision import datasets, transforms
-from torch import optim
 import torch.utils.data
 import torch
 import numpy as np
 import argparse
-import os
 import sys
 sys.path.append('.')
 
@@ -25,6 +24,7 @@ def parse_args():
     parser.add_argument('--batch-size', type=int, default=64,
                         help='batch size for training (default: 64)')
     parser.add_argument('--model', type=str, default='UNet')
+    parser.add_argument('--task', type=str, default="reconstruction", choices=["reconstruction", "edge", "denoise"])
     parser.add_argument('--checkpoint', type=str, default=None)
 
     args = parser.parse_args()
@@ -33,7 +33,7 @@ def parse_args():
 # --- test --- #
 
 
-def test(args, model, metrics, test_loader, epoch=5, device="cpu"):
+def test(args, model, metrics, test_loader, epoch=1, device="cpu"):
     model.eval()
     test_loss = 0
     metrics_dict = {}
@@ -41,22 +41,23 @@ def test(args, model, metrics, test_loader, epoch=5, device="cpu"):
         metrics_dict[str(metric)] = []
 
     with torch.no_grad():
-        for batch_idx, (data, label) in enumerate(test_loader):
+        for batch_idx, (data, _) in enumerate(test_loader):
             data = data.to(device)
-            recon_data = model(data)
-            cur_loss = model.get_loss(recon_data, data).item()
+            img, label = data[:, 0:1], data[:, 1:2]
+            recon_data = model(img)
+            cur_loss = model.get_loss(recon_data, label).item()
             test_loss += cur_loss
             if batch_idx == 0:
                 # saves 8 samples of the first batch as an image file to compare input images and reconstructed images
                 num_samples = min(args.batch_size, 8)
                 comparison = torch.cat(
-                    [data[:num_samples], recon_data.view(args.batch_size, 1, 28, 28)[:num_samples]]).cpu()
+                    [img[:num_samples], recon_data.view(args.batch_size, 1, 28, 28)[:num_samples]]).cpu()
                 model.save_img(
-                    comparison, 'reconstruction', epoch, num_samples)
+                    comparison, args.task, epoch, num_samples)
 
             for metric in metrics:
                 metrics_dict[str(metric)].append(
-                    metric(recon_data, data))
+                    metric(recon_data, label))
 
     test_loss /= len(test_loader.dataset)
     print('====> Test loss: {:.4f}'.format(test_loss))
@@ -76,11 +77,20 @@ def main():
     model = eval(args.model)().to(device)
 
     # --- data loading --- #
+    if args.task == "reconstruction":
+        transform = transforms.Compose([GetCopy(),transforms.ToTensor()])
+    elif args.task == "edge":
+        transform = transforms.Compose([GetEdge(),transforms.ToTensor()])
+    elif args.task == "denoise":
+        transform = transforms.Compose([GetBlur(),transforms.ToTensor()])
+    else:
+        raise NotImplementedError
+    
     test_data = datasets.FashionMNIST('./data', train=False,
-                                      transform=transforms.ToTensor())
+                                      transform=transform)
 
     test_loader = torch.utils.data.DataLoader(
-        test_data, batch_size=args.batch_size, shuffle=True, **kwargs)
+        test_data, batch_size=args.batch_size, shuffle=False, **kwargs)
 
     model.load_state_dict(torch.load(args.checkpoint))
     test(args, model, metrics, test_loader, int(

@@ -1,0 +1,5 @@
+====> Test loss: 191.3178
+====> Test MAE: 0.0137
+====> Test PSNR: 32.6681
+====> Test RMSE: 0.0856
+====> Test SSIM: 0.9972

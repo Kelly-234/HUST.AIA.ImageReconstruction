@@ -20,6 +20,6 @@ class BaseModel(torch.nn.Module):
     def save_img(self, image, name, epoch, nrow=8):
         os.makedirs(os.path.join('results', str(self)), exist_ok=True)
 
-        if epoch % 5 == 0:
+        if epoch % 1 == 0:
             save_path = os.path.join('results', str(self), name + '_epoch' + str(epoch) + '.png')
             save_image(image, save_path, nrow=nrow)
