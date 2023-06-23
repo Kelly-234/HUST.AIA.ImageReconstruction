@@ -62,7 +62,7 @@
                 "--batch-size=16"
             ],
             "console": "integratedTerminal",
-            "justMyCode": true
+            "justMyCode": false
         },
         {
             "name": "UNet test",
