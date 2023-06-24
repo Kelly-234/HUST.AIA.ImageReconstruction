@@ -17,7 +17,7 @@ import os
 import sys
 sys.path.append('.')    # 找文件用的
 
-# 解析和配置
+# --- 解析和配置 --- #
 
 
 def parse_args():
@@ -47,12 +47,13 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-# --- train --- #
+# --- 训练 --- #
 
 
 def train(args, model, optimizer, train_loader, epoch, device):
     model.train()
     train_loss = 0
+    # batch_idx：第几批训练数据，data：原始图像，_：label
     for batch_idx, (data, _) in enumerate(train_loader):
         # data: [batch size, 1, 28, 28]
         # label: [batch size] -> we don't use(不完成分类任务)
@@ -62,10 +63,11 @@ def train(args, model, optimizer, train_loader, epoch, device):
         img, label = data[:, 0:1], data[:, 1:2]
         recon_data = model(img)
         loss = model.get_loss(recon_data, label)
-        loss.backward()
+        loss.backward()  # 梯度回传
         cur_loss = loss.item()
         train_loss += cur_loss
         optimizer.step()
+        # 打印结果
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
@@ -81,7 +83,7 @@ def train(args, model, optimizer, train_loader, epoch, device):
         torch.save(model.state_dict(), os.path.join(
             save_path, "{}_epoch_{}.pth".format(args.task, epoch)))
 
-# --- main function --- #
+# --- 主要功能 --- #
 
 
 def main():
@@ -99,7 +101,8 @@ def main():
     optimizer = optim.Adam(
         model.parameters(), lr=args.learning_rate)
 
-    # --- data loading --- #
+    # --- 数据加载 --- #
+    # 生成GetCopy对象
     if args.task == "reconstruction":
         transform = transforms.Compose([GetCopy(), transforms.ToTensor()])
     elif args.task == "edge":
@@ -109,20 +112,22 @@ def main():
     else:
         raise NotImplementedError
 
+    # train_data：一个句柄，用于在训练的过程中寻找相应数据
     train_data = datasets.FashionMNIST('./data', train=True, download=True,
                                        transform=transform)
     test_data = datasets.FashionMNIST('./data', train=False,
                                       transform=transform)
 
-# 创建了一个用于训练数据的数据加载器。train_data变量是包含训练样本的数据集
-# batch_size参数确定每个批次的样本数量。shuffle=True参数表示在训练期间数据将被随机洗牌。
+    # 用于调用GetCopy进行数据的具体加载，包括一次加载几个数据、按什么顺序加载、用几个cpu加载
     train_loader = torch.utils.data.DataLoader(
         train_data, batch_size=args.batch_size, shuffle=True, **kwargs)
     test_loader = torch.utils.data.DataLoader(
         test_data, batch_size=args.batch_size, shuffle=False, **kwargs)
 
+    # 从上次的中断恢复训练
     if args.resume_from is not None:
         model.load_state_dict(torch.load(args.resume_from))
+    # 训练/测试
     for epoch in range(1, args.epochs + 1):
         train(args, model, optimizer, train_loader, epoch, device)
         test(args, model, metrics, test_loader, epoch, device)

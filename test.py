@@ -16,7 +16,7 @@ import sys
 sys.path.append('.')
 
 
-# --- parsing and configuration --- #
+# --- 解析和配置 --- #
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -24,13 +24,15 @@ def parse_args():
     parser.add_argument('--batch-size', type=int, default=64,
                         help='batch size for training (default: 64)')
     parser.add_argument('--model', type=str, default='UNet')
-    parser.add_argument('--task', type=str, default="reconstruction", choices=["reconstruction", "edge", "denoise"])
+    parser.add_argument('--task', type=str, default="reconstruction",
+                        choices=["reconstruction", "edge", "denoise"])
+    # 测试模型
     parser.add_argument('--checkpoint', type=str, default=None)
 
     args = parser.parse_args()
     return args
 
-# --- test --- #
+# --- 测试 --- #
 
 
 def test(args, model, metrics, test_loader, epoch=1, device="cpu"):
@@ -48,7 +50,7 @@ def test(args, model, metrics, test_loader, epoch=1, device="cpu"):
             cur_loss = model.get_loss(recon_data, label).item()
             test_loss += cur_loss
             if batch_idx == 0:
-                # saves 8 samples of the first batch as an image file to compare input images and reconstructed images
+                # 保存第一批次中的八组图片用于对比原始图像和重建结果
                 num_samples = min(args.batch_size, 8)
                 comparison = torch.cat(
                     [img[:num_samples], recon_data.view(args.batch_size, 1, 28, 28)[:num_samples]]).cpu()
@@ -65,7 +67,7 @@ def test(args, model, metrics, test_loader, epoch=1, device="cpu"):
     for k, v in metrics_dict.items():
         print('====> Test {}: {:.4f}'.format(k, np.mean(v)))
 
-# --- main function --- #
+# --- 主要功能 --- #
 
 
 def main():
@@ -76,16 +78,16 @@ def main():
     kwargs = {'num_workers': 1, 'pin_memory': True} if device == 'cuda' else {}
     model = eval(args.model)().to(device)
 
-    # --- data loading --- #
+    # --- 数据加载 --- #
     if args.task == "reconstruction":
-        transform = transforms.Compose([GetCopy(),transforms.ToTensor()])
+        transform = transforms.Compose([GetCopy(), transforms.ToTensor()])
     elif args.task == "edge":
-        transform = transforms.Compose([GetEdge(),transforms.ToTensor()])
+        transform = transforms.Compose([GetEdge(), transforms.ToTensor()])
     elif args.task == "denoise":
-        transform = transforms.Compose([GetBlur(),transforms.ToTensor()])
+        transform = transforms.Compose([GetBlur(), transforms.ToTensor()])
     else:
         raise NotImplementedError
-    
+
     test_data = datasets.FashionMNIST('./data', train=False,
                                       transform=transform)
 
